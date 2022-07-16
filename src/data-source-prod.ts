@@ -10,8 +10,8 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_BASE || 'bank',
   synchronize: true,
   logging: true,
-  entities: ['src/**/entities/*.entity.ts'],
-  migrations: ['src/migrations/*.ts'],
+  entities: ['dist/**/entities/*.entity.js'],
+  migrations: ['dist/migrations/*.js'],
 });
 
 // AppDataSource.initialize()

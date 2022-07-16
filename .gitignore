@@ -7,3 +7,6 @@ temp/
 dist/
 .DS_Store
 .env
+site/
+cert/
+prod.docker-compose.yml
