@@ -1,8 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ConfirmRequestDto, ConfirmResponseDto } from './types/confirm.dto';
-import { SignInRequestDto, SignInResponseDto } from './types/signin.dto';
-import { SignUpRequestDto, SignUpResponseDto } from './types/signup.dto';
+import { ConfirmRequestDto, ConfirmResponseDto } from './dtos/confirm.dto';
+import { SignInRequestDto, SignInResponseDto } from './dtos/signin.dto';
+import { SignUpRequestDto, SignUpResponseDto } from './dtos/signup.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,17 +11,36 @@ export class AuthController {
 
     @Post("signin")
     async signIn(@Body() body: SignInRequestDto): Promise<SignInResponseDto> {
-        return this.authService.signIn(body.email, body.password)
+        const auth = await this.authService.signIn(body.email, body.password)
+
+        return {
+            id: auth.id,
+            token: auth.token
+        }
     }
 
 
     @Post("signup")
     async signUp(@Body() body: SignUpRequestDto): Promise<SignUpResponseDto> {
-        return this.authService.signUp(body.email, body.password)
+        const auth = await this.authService.signUp(
+            body.email, 
+            body.password,
+            body.nickname
+        )
+
+        return {
+            id: auth.id,
+            token: auth.token
+        }
     }
 
     @Post("confirm")
     async confirm(@Body() body: ConfirmRequestDto): Promise<ConfirmResponseDto> {
-        return this.authService.confirm(body.code)
+        const auth = await this.authService.confirm(body.code)
+
+        return {
+            id: auth.id,
+            token: auth.token
+        }
     }
 }

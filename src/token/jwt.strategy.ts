@@ -11,7 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private tokenService: TokenService
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromHeader('access-token'),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: jwtConstants.secret,
     });

@@ -28,6 +28,16 @@ export class UserService {
         return this.mapEntityToModel(entity)
     }
 
+    async validateNickname(nickname: string): Promise<boolean> {
+        const entity = await this.repository.findOne({
+            where: {
+                nickname
+            },
+        })
+
+        return (entity == null)
+    }
+
     async create(newUser: INewUser): Promise<IUser & IUserCode> {
         const foundUser = await this.findByEmail(newUser.email)
         if (foundUser != null) {
@@ -38,6 +48,7 @@ export class UserService {
         const entity = await this.repository.save<DeepPartial<UserEntity>>({
             email: newUser.email,
             password: newUser.password,
+            nickname: newUser.nickname,
             status: UserStatusEntity.ACTIVE,
             code: code
         })

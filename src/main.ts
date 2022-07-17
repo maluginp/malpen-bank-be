@@ -1,6 +1,7 @@
-import { RequestMethod } from '@nestjs/common';
+import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import express from 'express';
 import fs from 'fs';
 import http from 'http'
@@ -34,6 +35,18 @@ async function bootstrap() {
       }
     ],
   });
+
+  app.useGlobalPipes(new ValidationPipe());
+
+  const config = new DocumentBuilder()
+    .addBearerAuth()
+    .setTitle('Malpen Bank')
+    .setDescription('Malpen Banl API')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
 
   await app.init();
 

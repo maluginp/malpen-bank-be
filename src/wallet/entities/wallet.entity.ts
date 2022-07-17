@@ -43,6 +43,11 @@ export class WalletEntity {
     })
     status: WalletStatusEntity
 
+    @Column({
+        name: 'is_default'
+    })
+    isDefault: boolean
+
     @Column({ name: "created_at" })
     createdAt: string;
 

@@ -1,4 +1,8 @@
+import { IsNotEmpty } from "class-validator";
+
 export class ConfirmRequestDto {
+  
+  @IsNotEmpty()
   code: string
 }
 

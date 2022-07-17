@@ -12,6 +12,7 @@ export interface IUserCode {
 export interface INewUser {
     email: string
     password: string
+    nickname: string
 }
 
 export enum IUserStatus {

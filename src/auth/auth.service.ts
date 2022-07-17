@@ -1,12 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { WalletService } from '../wallet/wallet.service';
-import { SignUpResponseDto } from './types/signup.dto';
 import bcrypt from 'bcrypt'
 import { TokenService } from '../token/token.service';
-import { SignInResponseDto } from './types/signin.dto';
-import { ConfirmResponseDto } from './types/confirm.dto';
 import { MailService } from '../mail/mail.service';
+import { IAuthToken } from './types/auth.type';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +16,7 @@ export class AuthService {
         private mailService: MailService,
     ) { }
 
-    async signIn(email: string, password: string): Promise<SignInResponseDto> {
+    async signIn(email: string, password: string): Promise<IAuthToken> {
         const user = await this.userService.findByEmail(email)
 
         if (user == null) {
@@ -39,21 +37,35 @@ export class AuthService {
         }   
     }
 
-    async signUp(email: string, password: string): Promise<SignUpResponseDto> {
+    async signUp(
+        email: string, 
+        password: string,
+        nickname: string,
+    ): Promise<IAuthToken> {
         const foundUser = await this.userService.findByEmail(email)
 
         if (foundUser != null) {
             throw new HttpException("Already existed", HttpStatus.FORBIDDEN)
         }
 
+        const isValidNickname = await this.userService.validateNickname(nickname)
+        if (!isValidNickname) {
+            throw new HttpException("User with this nickname already existed", HttpStatus.FORBIDDEN)
+        }
+
         const hash = await bcrypt.hash(password, 10)
         
         const user = await this.userService.create({
             email, 
-            password: hash
+            password: hash,
+            nickname
         })
-        
-        await this.walletService.create(user.id)
+
+        try {
+            await this.walletService.create(user.id)
+        } catch (e) {
+            
+        }
         const token = await this.tokenService.generate(user.id, user.email)
 
         await this.mailService.sendUserConfirmation(user, user.code)
@@ -66,7 +78,7 @@ export class AuthService {
         }   
     }
 
-    async confirm(code: string): Promise<ConfirmResponseDto> {
+    async confirm(code: string): Promise<IAuthToken> {
         const user = await this.userService.confirm(code)
         const token = await this.tokenService.generate(user.id, user.email)
         return {

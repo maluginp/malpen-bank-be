@@ -18,6 +18,9 @@ export class UserEntity {
     @Column({ name: 'password' })
     password: string
 
+    @Column({ name: 'nickname', unique: true })
+    nickname: string
+
     @OneToMany(
         (_) => WalletEntity, 
         (wallet) => wallet.user
