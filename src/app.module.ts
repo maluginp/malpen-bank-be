@@ -31,7 +31,8 @@ import { join } from 'path';
         database: config.get('DB_BASE'),
         entities: [
           UserEntity, WalletEntity, TransactionEntity
-        ]
+        ],
+        logging: false,
       }),
       inject: [ConfigService],
     }),

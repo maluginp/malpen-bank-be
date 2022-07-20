@@ -36,3 +36,9 @@ export class UpdateWalletRequestDto {
   @Length(3, 50)
   name: string
 }
+
+
+export class WalletSearchResponseDto {
+  nickname: string
+  address: string
+}

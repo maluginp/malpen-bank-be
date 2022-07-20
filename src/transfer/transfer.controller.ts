@@ -15,9 +15,20 @@ export class TransferController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post()
-    async transfer(@Body() body: TransferFundRequestDto, @ReqToken() token: Token): Promise<TransactionResponseDto> {   
-        return this.transferService.transfer(
+    @Post("internal")
+    async transferInternal(@Body() body: TransferFundRequestDto, @ReqToken() token: Token): Promise<TransactionResponseDto> {   
+        return this.transferService.transferInternal(
+            token.userId, 
+            body.from,
+            body.to,
+            body.amount
+        )
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post("external")
+    async transferExternal(@Body() body: TransferFundRequestDto, @ReqToken() token: Token): Promise<TransactionResponseDto> {   
+        return this.transferService.transferExternal(
             token.userId, 
             body.from,
             body.to,

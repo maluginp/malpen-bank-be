@@ -2,9 +2,9 @@ import { CACHE_MANAGER, HttpException, HttpStatus, Inject, Injectable } from '@n
 import { Cache } from 'cache-manager'
 import { InjectRepository } from '@nestjs/typeorm';
 import { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Not, Like, Repository } from 'typeorm';
 import { WalletEntity, WalletStatusEntity } from './entities/wallet.entity';
-import { IWallet, IBalancedWallet, IUpdateWallet } from './types/wallet.type';
+import { IWallet, IBalancedWallet, IUpdateWallet, IFoundWalletWithNickname } from './types/wallet.type';
 import * as base64 from "byte-base64";
 import { Token, UserID } from '../token/types/token.type';
 
@@ -124,7 +124,7 @@ export class WalletService {
         return cachedBalance;
     }
 
-    async send(
+    async sendInternal(
         userId: number,
         fromWallet: string,
         toWallet: string,
@@ -176,16 +176,94 @@ export class WalletService {
         return signed
     }
 
+    async sendExternal(
+        userId: number,
+        fromWallet: string,
+        toWallet: string,
+        amount: number,
+    ): Promise<string> {
+
+        const fromEntity = await this.repository.findOne({
+            where: {
+                user: {
+                    id: userId
+                },
+                address: fromWallet
+            }
+        })
+
+        const skFrom = base64.base64ToBytes(fromEntity.privateKey)
+        const fromKeyPair = Keypair.fromSecretKey(skFrom)
+
+        const toEntity = await this.repository.findOne({
+            where: {
+                address: toWallet
+            }
+        })
+
+        const skTo = base64.base64ToBytes(toEntity.privateKey)
+        const toKeyPair = Keypair.fromSecretKey(skTo)
+
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: fromKeyPair.publicKey,
+                toPubkey: toKeyPair.publicKey,
+                lamports: amount,
+            }),
+        );
+
+        // Sign transaction, broadcast, and confirm
+        const signed = await sendAndConfirmTransaction(
+            this.connection,
+            transaction,
+            [fromKeyPair],
+        )
+
+        await this.cacheManager.del(this.cacheBalancePk(fromWallet))
+        await this.cacheManager.del(this.cacheBalancePk(toWallet))
+
+        return signed
+    }
+
     async update(id: number, userId: UserID, wallet: Partial<IUpdateWallet>): Promise<IWallet> {
         const entity = await this.repository.update({
             user: {
-                id: userId.unwrap()
+                id: userId.unwrap(),
             },
             id: id
         }, wallet)
 
       
         return this.getById(userId, id)
+    }
+
+    async findByNickname(
+        userId: UserID, 
+        nickname: string, 
+        take: number, 
+        skip: number
+    ): Promise<IFoundWalletWithNickname[]> {
+        console.log(`Searching wallets for nickname: ${nickname}`)
+
+        const entities = await this.repository.find({
+            where: {
+                user: {
+                    id: Not(userId.unwrap()),
+                    nickname: Like(`%${nickname}%`)
+                },
+                isDefault: true
+            },
+            relations: ["user"],
+            take,
+            skip
+        })
+
+        return entities.map(e => ({
+            userId: e.user.id,
+            userNickname: e.user.nickname,
+            walletName: e.name,
+            walletAddress: e.address
+        }))
     }
 
     private cacheBalancePk(publicKey: string): string {

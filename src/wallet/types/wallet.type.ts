@@ -16,3 +16,10 @@ export interface IBalancedWallet extends IWallet {
 export interface IUpdateWallet {
     name: string
 }
+
+export interface IFoundWalletWithNickname {
+    userId: number
+    userNickname: string
+    walletName: string
+    walletAddress: string
+}

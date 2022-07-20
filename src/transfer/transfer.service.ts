@@ -11,14 +11,35 @@ export class TransferService {
         private transactionService: TransactionService,
     ) {}
 
-    async transfer(
+    async transferInternal(
         userId: UserID,
         fromWallet: string,
         toWallet: string,
         amount: number,
     ): Promise<ITransaction> {
 
-        const signature = await this.walletService.send(
+        const signature = await this.walletService.sendInternal(
+            userId.unwrap(), fromWallet, toWallet, amount
+        )
+
+        return this.transactionService.createTransfer({
+            signature,
+            senderId: userId.unwrap(),
+            senderAddress: fromWallet,
+            receiverId: userId.unwrap(),
+            receiverAddress: toWallet,
+            amount: amount
+        })
+    }
+
+    async transferExternal(
+        userId: UserID,
+        fromWallet: string,
+        toWallet: string,
+        amount: number,
+    ): Promise<ITransaction> {
+
+        const signature = await this.walletService.sendExternal(
             userId.unwrap(), fromWallet, toWallet, amount
         )
 

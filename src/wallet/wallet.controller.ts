@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../token/jwt.guard';
 import { ReqToken } from '../token/token.decorator';
 import { Token } from '../token/types/token.type';
-import { UpdateWalletRequestDto, WalletResponseDto } from './dtos/wallet.dto';
+import { UpdateWalletRequestDto, WalletResponseDto, WalletSearchResponseDto } from './dtos/wallet.dto';
 import { IWallet } from './types/wallet.type';
 import { WalletService } from './wallet.service';
 
@@ -30,6 +30,27 @@ export class WalletController {
         const models = await this.walletService.allByUser(token.userId)
 
         return models.map(m => this.mapTypeToDto(m, null))
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get("search")
+    async findByNickname(
+        @ReqToken() token: Token, 
+        @Query("nickname") nickname?: string,
+        // @Query("skip") skip: number
+    ): Promise<WalletSearchResponseDto[]> {
+        console.log(`Control Serach by nickname = `,nickname)
+        const model = await this.walletService.findByNickname(
+            token.userId, 
+            nickname,
+            100,
+            0
+        )
+
+        return model.map(e => ({
+            nickname: e.userNickname,
+            address: e.walletAddress
+        }))
     }
 
     @UseGuards(JwtAuthGuard)
