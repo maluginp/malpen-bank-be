@@ -18,7 +18,7 @@ export class AccountController {
   @UseGuards(JwtAuthGuard)
   @Get("balance")
   async all(@ReqToken() token: Token): Promise<AccountBalanceResponseDto> {
-    const balance = await this.accountService.getBalance(token.id)
+    const balance = await this.accountService.getBalance(token.userId)
 
     return {
       balance
@@ -28,11 +28,12 @@ export class AccountController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getProfile(@ReqToken() token: Token): Promise<ProfileResponseDto> {
-    const user = await this.userService.findOne(token.id)
+    const user = await this.userService.findOne(token.userId.unwrap())
 
     return {
       id: user.id,
-      email: user.email
+      email: user.email,
+      nickname: user.nickname,
     }
   }
 }

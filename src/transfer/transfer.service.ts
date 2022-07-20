@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { UserID } from '../token/types/token.type';
 import { TransactionService } from '../transaction/transaction.service';
 import { ITransaction } from '../transaction/types/transaction.type';
 import { WalletService } from '../wallet/wallet.service';
@@ -11,21 +12,21 @@ export class TransferService {
     ) {}
 
     async transfer(
-        userId: number,
+        userId: UserID,
         fromWallet: string,
         toWallet: string,
         amount: number,
     ): Promise<ITransaction> {
 
         const signature = await this.walletService.send(
-            userId, fromWallet, toWallet, amount
+            userId.unwrap(), fromWallet, toWallet, amount
         )
 
         return this.transactionService.createTransfer({
             signature,
-            senderId: userId,
+            senderId: userId.unwrap(),
             senderAddress: fromWallet,
-            receiverId: userId,
+            receiverId: userId.unwrap(),
             receiverAddress: toWallet,
             amount: amount
         })

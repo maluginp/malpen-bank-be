@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
-import { Token } from './types/token.type';
+import { JwtToken, Token, UserID } from './types/token.type';
 
 @Injectable()
 export class TokenService {
@@ -10,9 +10,10 @@ export class TokenService {
         private userService: UserService
     ) {}
 
-    async generate(id: number, email: string): Promise<string> {
-        const token: Token = {
-            id, email
+    async generate(userId: number, email: string): Promise<string> {
+        const token: JwtToken = {
+            userId,
+            email
         }
         
         return this.jwtService.signAsync(token)
@@ -26,7 +27,7 @@ export class TokenService {
         }
 
         try {
-            await this.userService.findOne(token.id)
+            await this.userService.findOne(token.userId.unwrap())
             return true
         } catch(e) {
             return false

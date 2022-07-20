@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { UserID } from '../token/types/token.type';
 import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
@@ -7,7 +8,7 @@ export class AccountService {
     private walletService: WalletService
   ) { }
 
-  async getBalance(userId: number): Promise<number> {
+  async getBalance(userId: UserID): Promise<number> {
     const wallets = await this.walletService.allByUser(userId)
     
     return wallets

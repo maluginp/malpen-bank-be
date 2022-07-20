@@ -18,7 +18,7 @@ export class TransferController {
     @Post()
     async transfer(@Body() body: TransferFundRequestDto, @ReqToken() token: Token): Promise<TransactionResponseDto> {   
         return this.transferService.transfer(
-            token.id, 
+            token.userId, 
             body.from,
             body.to,
             body.amount

@@ -2,7 +2,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { TokenService } from './token.service';
-import { Token } from './types/token.type';
+import { JwtToken, Token, UserID } from './types/token.type';
 import { jwtConstants } from './constants';
 
 @Injectable()
@@ -17,9 +17,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: any): Promise<Token> {
+  async validate(payload: Partial<JwtToken>): Promise<Token> {
     return {
-      id: payload.id,
+      userId: new UserID(payload.userId),
       email: payload.email,
     }
   }

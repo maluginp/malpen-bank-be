@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionEntity, TransactionOperationEntity, TransactionStatusEntity } from './entities/transaction.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { ICreateTransactionTransfer, ITransaction, TransactionOperation, TransactionStatus } from './types/transaction.type';
+import { UserID } from '../token/types/token.type';
 
 @Injectable()
 export class TransactionService {
@@ -25,12 +26,14 @@ export class TransactionService {
         return this.mapEntityToTransaction(entity)
     }
 
-    async allByUserID(userId: number): Promise<ITransaction[]> {
+    async allByUserID(userId: UserID): Promise<ITransaction[]> {
+        const user = userId.unwrap()
+
         const entities = await this.repository.find({
             where: [{
-                senderId: userId
+                senderId: user
             }, {
-                receiverId: userId
+                receiverId: user
             }]
         })
 

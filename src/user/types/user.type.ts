@@ -3,6 +3,7 @@ export interface IUser {
     email: string
     password: string
     status: IUserStatus
+    nickname: string
 }
 
 export interface IUserCode {

@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt'
 import { TokenService } from '../token/token.service';
 import { MailService } from '../mail/mail.service';
 import { IAuthToken } from './types/auth.type';
+import { UserID } from '../token/types/token.type';
 
 @Injectable()
 export class AuthService {
@@ -62,7 +63,7 @@ export class AuthService {
         })
 
         try {
-            await this.walletService.create(user.id)
+            await this.walletService.create(new UserID(user.id))
         } catch (e) {
             
         }

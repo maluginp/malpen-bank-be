@@ -1,11 +1,12 @@
-import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager'
 import { InjectRepository } from '@nestjs/typeorm';
 import { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
 import { DeepPartial, Repository } from 'typeorm';
 import { WalletEntity, WalletStatusEntity } from './entities/wallet.entity';
-import { IWallet, IBalancedWallet } from './types/wallet.type';
+import { IWallet, IBalancedWallet, IUpdateWallet } from './types/wallet.type';
 import * as base64 from "byte-base64";
+import { Token, UserID } from '../token/types/token.type';
 
 
 const MAX_NUMBER_WALLETS = 5
@@ -21,11 +22,11 @@ export class WalletService {
 
     connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-    async create(userId: number): Promise<IWallet> {
+    async create(userId: UserID): Promise<IWallet> {
         const numberWallets = await this.repository.count({
             where: {
                 user: {
-                    id: userId
+                    id: userId.unwrap()
                 }
             }
         })
@@ -39,15 +40,21 @@ export class WalletService {
 
         const publicKey = keyPair.publicKey.toBase58()
         const pkInBase64 = base64.bytesToBase64(keyPair.secretKey)
+        let name = 'Дополнительный'
+        if (numberWallets == 0) {
+            name = 'Основной'
+        }
+        const isDefault = (numberWallets == 0)
 
         const entity = await this.repository.save<DeepPartial<WalletEntity>>({
-            name: publicKey,
+            name,
             user: {
-                id: userId
+                id: userId.unwrap()
             },
             address: publicKey,
             privateKey: pkInBase64,
             status: WalletStatusEntity.ACTIVE,
+            isDefault
         })
 
         console.log(`New wallet is created with PK: ${publicKey}`)
@@ -62,11 +69,11 @@ export class WalletService {
         }
     }
 
-    async allByUser(userId: number): Promise<IBalancedWallet[]> {
+    async allByUser(userId: UserID): Promise<IBalancedWallet[]> {
         const entities = await this.repository.find({
             where: {
                 user: {
-                    id: userId
+                    id: userId.unwrap()
                 }
             }
         })
@@ -84,12 +91,12 @@ export class WalletService {
         )
     }
 
-    async getById(userId: number, id: number): Promise<IBalancedWallet> {
+    async getById(userId: UserID, id: number): Promise<IBalancedWallet> {
         const entity = await this.repository.findOne({
             where: {
                 id: id,
                 user: {
-                    id: userId
+                    id: userId.unwrap()
                 }
             }
         })
@@ -167,6 +174,18 @@ export class WalletService {
         await this.cacheManager.del(this.cacheBalancePk(toWallet))
 
         return signed
+    }
+
+    async update(id: number, userId: UserID, wallet: Partial<IUpdateWallet>): Promise<IWallet> {
+        const entity = await this.repository.update({
+            user: {
+                id: userId.unwrap()
+            },
+            id: id
+        }, wallet)
+
+      
+        return this.getById(userId, id)
     }
 
     private cacheBalancePk(publicKey: string): string {

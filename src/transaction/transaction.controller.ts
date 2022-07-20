@@ -14,7 +14,7 @@ export class TransactionController {
     @UseGuards(JwtAuthGuard)
     @Get()
     async getAll(@ReqToken() token: Token): Promise<TransactionResponseDto[]> {
-        return this.transactionService.allByUserID(token.id)
+        return this.transactionService.allByUserID(token.userId)
     }
 
     @UseGuards(JwtAuthGuard)
